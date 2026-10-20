@@ -2,7 +2,7 @@
 <html lang="en-GB">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="School Run">
@@ -16,7 +16,7 @@
 <title>School Run</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&display=swap">
-<style>*,*::before,*::after{box-sizing:border-box}html{color-scheme:light}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}.login{max-width:420px;margin:24px auto 0}</style>
+<style>*,*::before,*::after{box-sizing:border-box}html,body,button,label,input,select,a,summary{touch-action:manipulation}html{color-scheme:light}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}.login{max-width:420px;margin:24px auto 0}</style>
 <style>
 /* Layout: mobile-first morning app — sticky date bar, one rounded card per child tinted in their colour, bottom tab bar. */
 :root{
@@ -567,6 +567,10 @@ document.addEventListener('click',e=>{
   const f=$('#login-form'); f.dataset.mode='up'; f.querySelector('h2'); $('#li-pass').autocomplete='new-password';
   f.querySelector('button[type=submit]').textContent='Create password'; t.remove();
 },true);
+
+/* stop iOS pinch and double-tap zoom */
+['gesturestart','gesturechange'].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));
+let lastTouch=0; document.addEventListener('touchend',e=>{const n=Date.now(); if(n-lastTouch<350 && !e.target.closest('input,select,textarea')) e.preventDefault(); lastTouch=n},{passive:false});
 
 /* ---------- boot ---------- */
 async function boot(){
