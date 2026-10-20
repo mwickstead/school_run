@@ -492,7 +492,7 @@ document.addEventListener('click',e=>{
   const a=t.dataset.act, S=state;
   const kid=()=>S.kids.find(k=>k.id===t.dataset.k);
   switch(a){
-    case 'sign-out': sb.auth.signOut().then(()=>location.reload()); break;
+    case 'sign-out': sb.auth.signOut().finally(()=>{started=false; session=null; renderLogin()}); break;
     case 'go-setup': view='setup'; render(); window.scrollTo(0,0); break;
     case 'prev': case 'next': {let d=cursor; do{d=add(d,a==='prev'?-1:1)}while([0,6].includes(parse(d).getDay())); cursor=d; render(); break}
     case 'prev-week': cursor=add(cursor,-7); render(); break;
@@ -556,10 +556,11 @@ document.addEventListener('submit',async e=>{
   if(e.target.id!=='login-form') return; e.preventDefault(); e.stopImmediatePropagation();
   const email=$('#li-email').value.trim(), password=$('#li-pass').value;
   const mode=e.target.dataset.mode||'in';
-  const r= mode==='up'? await sb.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}}) : await sb.auth.signInWithPassword({email,password});
+  const btn=e.target.querySelector('button[type=submit]'); btn.disabled=true; btn.textContent=mode==='up'?'Creating…':'Signing in…';
+  let r; try{ r= mode==='up'? await sb.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}}) : await sb.auth.signInWithPassword({email,password}); }catch(err){ return renderLogin('Couldn’t reach the server. Check your signal and try again.') }
   if(r.error) return renderLogin(r.error.message==='Invalid login credentials'?'That email and password don’t match.':r.error.message);
   if(mode==='up'&&!r.data.session) return renderLogin('Check your email and tap the confirmation link, then come back here and sign in.');
-  location.reload();
+  session=r.data.session; startApp();
 },true);
 document.addEventListener('click',e=>{
   const t=e.target.closest('[data-act="first-time"]'); if(!t) return;
@@ -569,8 +570,14 @@ document.addEventListener('click',e=>{
 
 /* ---------- boot ---------- */
 async function boot(){
-  const {data}=await sb.auth.getSession(); session=data.session;
+  let data={}; try{({data}=await sb.auth.getSession())}catch(e){}
+  session=data&&data.session;
   if(!session) return renderLogin();
+  startApp();
+}
+let started=false;
+async function startApp(){
+  if(started) return; started=true;
   document.querySelector('.tabbar').hidden=false;
   saveStatus={k:'busy',t:'Loading…'}; render(); $('#main').innerHTML='<p class="empty">Loading your week…</p>';
   try{
