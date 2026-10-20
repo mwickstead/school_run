@@ -568,9 +568,8 @@ document.addEventListener('click',e=>{
   f.querySelector('button[type=submit]').textContent='Create password'; t.remove();
 },true);
 
-/* stop iOS pinch and double-tap zoom */
+/* stop iOS pinch zoom (double-tap zoom is off via touch-action) */
 ['gesturestart','gesturechange'].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));
-let lastTouch=0; document.addEventListener('touchend',e=>{const n=Date.now(); if(n-lastTouch<350 && !e.target.closest('input,select,textarea')) e.preventDefault(); lastTouch=n},{passive:false});
 
 /* ---------- boot ---------- */
 async function boot(){
