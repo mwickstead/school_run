@@ -111,6 +111,15 @@ main{display:grid;gap:16px;padding-top:6px}
 .seg button{flex:1;border:0;background:transparent;border-radius:10px;padding:10px 6px;font-size:14px;font-weight:800;color:var(--muted);min-height:44px}
 .seg button[aria-pressed="true"]{background:var(--kid);color:#fff}
 .offcard .card-body{padding-block:14px}
+.tt{border-radius:14px;background:var(--tint2)}
+.tt summary{list-style:none;display:flex;align-items:center;justify-content:space-between;padding:12px;cursor:pointer;font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);min-height:44px}
+.tt summary::-webkit-details-marker{display:none}
+.tt .chev{transition:transform .2s;display:grid}
+.tt[open] .chev{transform:rotate(180deg)}
+.tt ol{list-style:none;margin:0;padding:0 12px 12px;display:grid;gap:2px;counter-reset:l}
+.tt li{font-weight:700;font-size:15px;padding:7px 10px;border-radius:10px;background:var(--surface)}
+.tt li.quiet{background:transparent;color:var(--muted);font-weight:600;font-size:13px;padding-block:3px}
+textarea.ttedit{border:1.5px solid var(--line);background:var(--surface);border-radius:12px;padding:10px 12px;font:inherit;font-size:15px;color:var(--ink);width:100%;min-height:120px;resize:vertical}
 /* panels */
 .cols{display:grid;gap:16px}
 @media (min-width:720px){.cols{grid-template-columns:1fr 1fr;align-items:start}}
@@ -238,7 +247,7 @@ function blankWeek(){const w={};for(let d=1;d<=5;d++)w[d]={wear:'uniform',bring:
 function blankState(){return {v:1,parents:['Mark','Kat'],kids:[],events:[],todos:[],packed:{},pickup:{}}}
 function normalise(s){
   const b=blankState(); s=Object.assign(b,s||{});
-  s.kids.forEach(k=>{k.week=Object.assign(blankWeek(),k.week||{});for(let d=1;d<=5;d++){const w=k.week[d];w.bring=w.bring||[];w.clubs=w.clubs||[];w.wear=w.wear||'uniform'}});
+  s.kids.forEach(k=>{k.week=Object.assign(blankWeek(),k.week||{});for(let d=1;d<=5;d++){const w=k.week[d];w.bring=w.bring||[];w.clubs=w.clubs||[];w.lessons=w.lessons||[];w.wear=w.wear||'uniform'}});
   return s;
 }
 
@@ -287,7 +296,7 @@ function dayInfo(S,kid,date){
   evs.forEach(e=>(e.bring||[]).forEach(b=>push(b,e.title||TYPES[e.type])));
   let home=kid.finish||'';
   p.clubs.forEach(c=>{if(c.until&&c.until>home)home=c.until});
-  return {off:false,wear,clubs:p.clubs,evs,items,home};
+  return {off:false,wear,clubs:p.clubs,lessons:p.lessons||[],evs,items,home};
 }
 const clubName=n=>String(n||'').split(' · ')[0];
 const clubNote=n=>String(n||'').split(' · ').slice(1).join(' · ');
@@ -347,8 +356,9 @@ function kidCard(S,k,d,ex){
   const clubs=info.clubs.length?`<div><div class="sec-label">After school</div><ul class="rows">${info.clubs.map(cl=>`<li class="row">${cl.until?`<span class="t">${hm(cl.until)}</span>`:''}<span class="main">${esc(clubName(cl.name))}${clubNote(cl.name)?`<small>${esc(clubNote(cl.name))}</small>`:''}</span></li>`).join('')}</ul></div>`:'';
   const pack=`<div><div class="sec-label"><span>In the bag</span>${info.items.length?`<span>${done} of ${info.items.length}</span>`:''}</div>
     ${info.items.length?`<div class="progress" aria-hidden="true"><i style="width:${pct}%"></i></div><ul class="pack">${info.items.map((it,i)=>{const on=packed.includes(it.name.toLowerCase());return `<li><label class="${on?'done':''}"><input class="check" type="checkbox" id="p-${esc(k.id)}-${i}" data-act="pack" data-key="${esc(key)}" data-item="${esc(it.name)}" ${on?'checked':''} ${ex||readOnly?'disabled':''}><span class="item"><span class="nm">${esc(it.name)}</span><small>${esc(it.src)}</small></span></label></li>`}).join('')}</ul>`:`<div class="nothing">Nothing extra today. Just the usual bag.</div>`}</div>`;
+  const tt=info.lessons.length?`<details class="tt"><summary><span>Today's timetable</span><span class="chev">${ICON.chev}</span></summary><ol>${info.lessons.map(l=>`<li class="${/^(playtime|break|lunch|lunchtime|registration)$/i.test(l)?'quiet':''}">${esc(l)}</li>`).join('')}</ol></details>`:'';
   const times=`<div class="times">${k.start?`<div class="time"><small>Drop-off</small><b>${hm(k.start)}</b></div>`:''}<div class="time"><small>Home time</small><b>${hm(info.home)}</b></div></div>`;
-  return `<article class="card" style="--kid:${c}">${head}<div class="card-body">${evs}${pack}${clubs}${times}</div></article>`;
+  return `<article class="card" style="--kid:${c}">${head}<div class="card-body">${evs}${pack}${clubs}${tt}${times}</div></article>`;
 }
 function kidName(S,id){if(id==='all')return 'Everyone';const k=S.kids.find(k=>k.id===id);return k?k.name:'—'}
 function kidDots(S,id){const ks=id==='all'?S.kids:S.kids.filter(k=>k.id===id);return `<span class="dots">${ks.map(k=>`<span class="dot" style="background:${colour(k)}"></span>`).join('')}</span>`}
@@ -437,6 +447,7 @@ function kidEditor(k,dis){
         <label class="field">Until<input type="time" id="k-${id}-${d}-c${ci}-until" data-set="club" data-k="${id}" data-d="${d}" data-c="${ci}" data-f="until" value="${esc(cl.until)}" ${dis}></label>
         <label class="field full">Bring<input id="k-${id}-${d}-c${ci}-bring" data-set="club" data-k="${id}" data-d="${d}" data-c="${ci}" data-f="bring" value="${esc((cl.bring||[]).join(', '))}" ${dis}></label>
         <button class="x full" data-act="del-club" data-k="${id}" data-d="${d}" data-c="${ci}" ${dis}>Remove club</button></div>`).join('')}
+      <label class="field">Timetable (one lesson per line)<textarea class="ttedit" id="k-${id}-${d}-tt" data-set="lessons" data-k="${id}" data-d="${d}" ${dis}>${esc((w.lessons||[]).join('\n'))}</textarea></label>
       <button class="link" data-act="add-club" data-k="${id}" data-d="${d}" ${dis}>+ Add a club</button>
     </div>`}).join('')}
     <button class="x" data-act="del-kid" data-k="${id}" ${dis}>Remove ${esc(k.name||'child')}</button>
@@ -521,6 +532,7 @@ document.addEventListener('change',e=>{
   if(!k) return;
   if(s==='kid'){k[t.dataset.f]=t.value.trim(); changed(t.dataset.f==='name')}
   else if(s==='attend'){k.week[t.dataset.d].off=!t.checked; changed(false)}
+  else if(s==='lessons'){k.week[t.dataset.d].lessons=t.value.split('\n').map(x=>x.trim()).filter(Boolean); changed(false)}
   else if(s==='wear'){k.week[t.dataset.d].wear=t.value; changed(false)}
   else if(s==='bring'){k.week[t.dataset.d].bring=list(t.value); changed(false)}
   else if(s==='club'){const c=k.week[t.dataset.d].clubs[+t.dataset.c]; if(!c) return; c[t.dataset.f]=t.dataset.f==='bring'?list(t.value):t.value.trim(); changed(false)}
