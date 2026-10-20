@@ -580,6 +580,18 @@ document.addEventListener('click',e=>{
   f.querySelector('button[type=submit]').textContent='Create password'; t.remove();
 },true);
 
+/* self-update: when the app comes back to the front, check for a newer build */
+const BUILD='20261020221739';
+async function checkUpdate(){
+  try{
+    const t=await fetch(location.pathname+'?check='+Date.now(),{cache:'no-store'}).then(r=>r.text());
+    const m=t.match(new RegExp("const BUI"+"LD='(\\w+)'"));
+    if(m&&m[1]!==BUILD&&!dirty&&!saving){location.replace(location.pathname+'?v='+m[1])}
+  }catch(e){}
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible') checkUpdate()});
+setTimeout(checkUpdate,3000);
+
 /* stop iOS pinch zoom (double-tap zoom is off via touch-action) */
 ['gesturestart','gesturechange'].forEach(t=>document.addEventListener(t,e=>e.preventDefault(),{passive:false}));
 
