@@ -280,7 +280,9 @@ function defaultDate(){
 const isExample=()=>state.kids.length===0;
 const data=()=>isExample()?exampleState():state;
 
-function eventsOn(S,kidId,date){return S.events.filter(e=>(e.kid==='all'||e.kid===kidId)&&date>=e.date&&date<=(e.end||e.date))}
+const PE_RE=/\b(pe|games)\b/i;
+function hasPE(kid,date){if(!kid)return true; const w=kid.week[parse(date).getDay()]; return !!w&&(w.wear==='pe'||(w.lessons||[]).some(l=>PE_RE.test(l)))}
+function eventsOn(S,kidId,date){const kid=S.kids.find(k=>k.id===kidId); return S.events.filter(e=>(e.kid==='all'||e.kid===kidId)&&date>=e.date&&date<=(e.end||e.date)&&(!e.peOnly||hasPE(kid,date)))}
 function dayInfo(S,kid,date){
   const dow=parse(date).getDay();
   const evs=eventsOn(S,kid.id,date);
@@ -406,9 +408,10 @@ function renderSetup(){
         <label class="field">Time<input type="time" id="ev-time"></label>
       </div>
       <label class="field">Bring (comma separated)<input id="ev-bring" placeholder="Football boots, shin pads"></label>
+      <label class="hint" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="ev-pe"> Only on their PE or games days</label>
       <button class="btn" type="submit" ${dis}>Add date</button>
     </form>
-    ${S.events.length?`<ul class="list">${[...S.events].sort((a,b)=>a.date.localeCompare(b.date)).map(e=>`<li><span class="grow">${kidDots(S,e.kid)}<b>${nice(e.date)}${e.end&&e.end!==e.date?' – '+nice(e.end):''}</b> · ${esc(e.title)}</span><button class="x" data-act="del-ev" data-id="${esc(e.id)}" ${dis}>Remove</button></li>`).join('')}</ul>`:`<p class="empty">No dates yet.</p>`}
+    ${S.events.length?`<ul class="list">${[...S.events].sort((a,b)=>a.date.localeCompare(b.date)).map(e=>`<li><span class="grow">${kidDots(S,e.kid)}<b>${nice(e.date)}${e.end&&e.end!==e.date?' – '+nice(e.end):''}</b> · ${esc(e.title)}${e.peOnly?' · PE days only':''}</span><button class="x" data-act="del-ev" data-id="${esc(e.id)}" ${dis}>Remove</button></li>`).join('')}</ul>`:`<p class="empty">No dates yet.</p>`}
   </section>
   <section class="panel"><h2>Forms &amp; payments</h2>
     <form id="td-form" class="add">
@@ -542,7 +545,7 @@ document.addEventListener('submit',e=>{
   if(e.target.id==='ev-form'){
     const title=$('#ev-title').value.trim(), date=$('#ev-date').value; if(!title||!date) return;
     const end=$('#ev-end').value;
-    S.events.push({id:uid(),type:$('#ev-type').value,title,kid:$('#ev-kid').value,date,end:end&&end>date?end:'',time:$('#ev-time').value,bring:list($('#ev-bring').value)});
+    S.events.push({id:uid(),type:$('#ev-type').value,title,kid:$('#ev-kid').value,date,end:end&&end>date?end:'',time:$('#ev-time').value,bring:list($('#ev-bring').value),...($('#ev-pe').checked?{peOnly:true}:{})});
     changed(); toast('Added: '+title);
   }
   if(e.target.id==='td-form'){
@@ -581,7 +584,7 @@ document.addEventListener('click',e=>{
 },true);
 
 /* self-update: when the app comes back to the front, check for a newer build */
-const BUILD='20261101200404';
+const BUILD='20261101201347';
 async function checkUpdate(){
   try{
     const t=await fetch(location.pathname+'?check='+Date.now(),{cache:'no-store'}).then(r=>r.text());
