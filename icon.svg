@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- School Run app icon: morning sun rising over the road to school.
+       Full-bleed square (iOS rounds the corners); key shapes sit inside the
+       central 80% so the maskable Android crop is safe too.
+       Re-render the PNGs with ./icons.sh after editing. -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFD166"/>
+      <stop offset="0.62" stop-color="#FFA41B"/>
+      <stop offset="1" stop-color="#FF7A2F"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="512" cy="640" r="430" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity=".55"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="hill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2A3350"/>
+      <stop offset="1" stop-color="#1D2433"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="1024" fill="url(#sky)"/>
+  <circle cx="512" cy="640" r="430" fill="url(#glow)"/>
+
+  <!-- rays -->
+  <g stroke="#FFF6DE" stroke-width="46" stroke-linecap="round">
+    <line x1="512" y1="378" x2="512" y2="290"/>
+    <line x1="327" y1="455" x2="265" y2="393"/>
+    <line x1="697" y1="455" x2="759" y2="393"/>
+    <line x1="250" y1="580" x2="165" y2="557"/>
+    <line x1="774" y1="580" x2="859" y2="557"/>
+  </g>
+
+  <!-- sun -->
+  <circle cx="512" cy="640" r="210" fill="#FFF6DE"/>
+
+  <!-- hill -->
+  <path fill="url(#hill)" d="M0 690 C 180 610 360 640 512 668 C 664 696 844 612 1024 660 L1024 1024 L0 1024 Z"/>
+
+  <!-- winding road to school -->
+  <path fill="#FFB020" d="M372 1024 C 392 900 650 880 574 778 C 548 742 516 712 500 682
+                          L 524 682 C 548 708 604 736 640 774 C 744 888 548 918 652 1024 Z"/>
+  <path fill="none" stroke="#FFF6DE" stroke-width="16" stroke-linecap="round" stroke-dasharray="1 52"
+        d="M512 1010 C 506 916 700 880 606 776 C 576 742 540 716 518 698"/>
+
+  <!-- schoolhouse on the horizon -->
+  <g fill="#1D2433" stroke="#1D2433" stroke-width="10" stroke-linejoin="round">
+    <rect x="460" y="604" width="104" height="80"/>
+    <path d="M438 612 L512 556 L586 612 Z"/>
+    <rect x="500" y="520" width="24" height="44"/>
+    <path d="M492 524 L512 506 L532 524 Z"/>
+  </g>
+  <path fill="#FFB020" d="M500 684 V654 a12 12 0 0 1 24 0 V684 Z"/>
+</svg>
